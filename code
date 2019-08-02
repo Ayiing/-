@@ -1,0 +1,182 @@
+import pygame
+pygame.init()
+wid=40#两行之间宽度
+WIDTH=720
+HEIGHT=720
+circle_size=15
+FLAG=0
+SIZE=17#17*17棋盘
+#设置颜色
+WHITE=(255,255,255)
+GREEN=(0,255,0)
+BLUE=(135,206,235)
+ORANGE=(255,97,0)
+RED=(255,0,0)
+board=[]#棋盘对应的列表,黑棋1，白棋2
+for i in range(0,SIZE*SIZE):
+    board.append(0)
+def draw_board(screen):
+    '''
+    画四周边框
+    '''
+    pygame.draw.line(screen,ORANGE,(40,40),(680,40),5)
+    pygame.draw.line(screen,ORANGE,(40,680),(680,680),5)
+    pygame.draw.line(screen,ORANGE,(40,40),(40,680),5)
+    pygame.draw.line(screen,ORANGE,(680,40),(680,680),5)
+    """ 
+    画棋盘线
+    """
+    for row in range(80,680,wid):
+        pygame.draw.line(screen,BLUE,(40,row),(680,row),2)
+    for col in range(80,680,wid):
+        pygame.draw.line(screen,BLUE,(col,40),(col,680),2)
+    '''
+    画*棋子位置
+    '''
+    pygame.draw.circle(screen,ORANGE,(360,360),5)
+def check(pos):
+    '''
+    1.排除不在范围内的坐标
+    2.排除已经有棋子的坐标
+    '''
+    global board
+    if pos[0]<40 or pos[0]>WIDTH-40 or pos[1]<40 or pos[1]>WIDTH-40:
+        return 0
+    index=[0,0]
+    index[0]=int((pos[0]-20)/wid)
+    index[1]=int((pos[1]-20)/wid)
+    if board[index[0]*SIZE+index[1]]:
+        return 0
+    return index[0],index[1]
+def win(index):
+    '''
+    判断输赢
+    需要：棋盘（board），当前下棋方
+    返回1=胜利，
+    '''
+    global board
+    global FLAG
+    if FLAG%2:#刚下完1
+        oper=1
+    else:
+        oper=2
+    num=1
+    i=index[0]*SIZE+index[1]
+    idx1=i-1
+    idx2=i+1
+    #注意一点 python list[-1]可以索引倒数第一个元素
+    while (idx1>=0 and idx1<17*17 and idx2>=0 and idx2<17*17) and (board[idx1]==oper or board[idx2]==oper):
+        if board[idx1]==oper:
+            idx1-=1
+            num+=1
+        else:
+            pass
+        if board[idx2]==oper:
+            idx2+=1
+            num+=1
+        else:
+            pass
+    if num>=5:
+        return 1
+    num=1
+    idx1=i-1*SIZE
+    idx2=i+1*SIZE
+    while (idx1>=0 and idx1<17*17 and idx2>=0 and idx2<17*17) and (board[idx1]==oper or board[idx2]==oper):
+        if board[idx1]==oper:
+            idx1-=1*SIZE
+            num+=1
+        else:
+            pass
+        if board[idx2]==oper:
+            idx2+=1*SIZE
+            num+=1
+        else:
+            pass
+    if num>=5:
+        return 1
+    #\
+    num=1
+    idx1=i-1*SIZE-1
+    idx2=i+1*SIZE+1
+    while (idx1>=0 and idx1<17*17 and idx2>=0 and idx2<17*17) and (board[idx1]==oper or board[idx2]==oper):
+        if board[idx1]==oper:
+            idx1-=1*SIZE+1
+            num+=1
+        else:
+            pass
+        if board[idx2]==oper:
+            idx2+=1*SIZE+1
+            num+=1
+        else:
+            pass
+    if num>=5:
+        return 1
+    #/
+    num=1
+    idx1=i-1*SIZE+1
+    idx2=i+1*SIZE-1
+    while (idx1>=0 and idx1<17*17 and idx2>=0 and idx2<17*17) and (board[idx1]==oper or board[idx2]==oper):
+        if board[idx1]==oper:
+            idx1-=1*SIZE-1
+            num+=1
+        else:
+            pass
+        if board[idx2]==oper:
+            idx2+=1*SIZE-1
+            num+=1
+        else:
+            pass
+    if num>=5:
+        return 1
+    return 0
+def trans(index):
+    '''
+    trans函数功能：鼠标点击的坐标->落子
+    3.落子 更新列
+    表
+    '''
+    global FLAG
+    global board
+    if FLAG%2==0:#偶数->1
+        board[index[0]*SIZE+index[1]]=1
+        FLAG+=1
+    else:
+        board[index[0]*SIZE+index[1]]=2
+        FLAG+=1
+    if win(index):
+        if FLAG%2:
+            print("****GREENwin!****")
+        else:
+            print("****WHITEwin!****")
+        return 1
+    return 0
+screen=pygame.display.set_mode((WIDTH,HEIGHT))
+pygame.display.set_caption("五子棋")
+draw_board(screen)
+while True:
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:
+            exit()
+        elif event.type==pygame.MOUSEBUTTONDOWN:
+            posi=event.pos
+            posi=check(posi)
+            if posi==0:
+                continue
+            if_win=trans(posi)
+            position=[0,0]
+            position[0]=posi[0]+1
+            position[1]=posi[1]+1
+            position[0]*=wid
+            position[1]*=wid
+            position=tuple(position)
+            if FLAG%2:
+                pygame.draw.circle(screen,GREEN,position,circle_size)
+            else:
+                pygame.draw.circle(screen,WHITE,position,circle_size)
+            if if_win:
+                win=pygame.image.load("win.jpg")
+                screen.blit(win,(200,240))
+        elif event.type==pygame.MOUSEMOTION:
+            print("pos",event.pos)
+        pygame.display.update()
+pygame.quit()
